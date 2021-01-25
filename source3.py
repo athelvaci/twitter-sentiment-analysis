@@ -3,6 +3,7 @@ import tweepy
 import matplotlib.pyplot as plt
 import pandas as pd
 import re
+import datetime
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from API_KEYS import api_key, api_secret_key, access_token, access_token_secret
 
@@ -12,13 +13,21 @@ auth = tweepy.OAuthHandler(api_key, api_secret_key)
 auth.set_access_token(access_token, access_token_secret)
 api = tweepy.API(auth)
 
-#Sentiment Analysis
 def percentage(part,whole):
     return 100 * float(part)/float(whole)
 
+
 keyword = "Cyberpunk"
-noOfTweet = 100
-tweets = tweepy.Cursor(api.search, q = keyword).items(noOfTweet)
+noOfTweet = 10
+
+# Set the end date
+today = datetime.date.today()
+end = today - datetime.timedelta(days = 3)
+end_verbose = end.strftime('%A') + ', ' + end.strftime("%B") + ' ' + end.strftime("%d") + ', ' + end.strftime("%Y")
+
+# Search for tweets
+tweets = tweepy.Cursor(api.search, q = keyword, until = end).items(noOfTweet)
+
 positive = 0
 negative = 0
 neutral = 0
@@ -69,39 +78,27 @@ print("neutral number: ", len(neutral_list))
 labels = ['Positive [' + str(positive) + '%]' , 'Neutral [' + str(neutral) + '%]', 'Negative [' + str(negative) + '%]']
 sizes = [positive, neutral, negative]
 colors = ['yellowgreen', 'blue','red']
-patches, texts = plt.pie(sizes,colors=colors, startangle=90)
+patches, texts = plt.pie(sizes,colors=colors, startangle = 90)
 plt.style.use('default')
 plt.legend(labels)
 plt.title("Sentiment Analysis Result for keyword=  " + keyword + "" )
 plt.axis('equal')
 plt.show()
 
-raise SystemExit
-'''
+tw_list = pd.DataFrame(tweet_list)
+
 tweet_list.drop_duplicates(inplace = True)
 
 tw_list = pd.DataFrame(tweet_list)
 tw_list["text"] = tw_list[0]
-tw_list
-
-tweet_list
 
 #Cleaning Text (RT, Punctuation etc)
-
-#Creating new dataframe and new features
-tw_list = pd.DataFrame(tweet_list)
-tw_list["text"] = tw_list[0]
-
-#Removing RT, Punctuation etc
 remove_rt = lambda x: re.sub('RT @\w+: '," ",x)
 rt = lambda x: re.sub("(@[A-Za-z0-9]+)|([^0-9A-Za-z \t])|(\w+:\/\/\S+)"," ",x)
 tw_list["text"] = tw_list.text.map(remove_rt).map(rt)
 tw_list["text"] = tw_list.text.str.lower()
-tw_list.head(10)
-
 
 #Calculating Negative, Positive, Neutral and Compound values
-
 tw_list[['polarity', 'subjectivity']] = tw_list['text'].apply(lambda Text: pd.Series(TextBlob(Text).sentiment))
 for index, row in tw_list['text'].iteritems():
     score = SentimentIntensityAnalyzer().polarity_scores(row)
@@ -120,7 +117,6 @@ for index, row in tw_list['text'].iteritems():
     tw_list.loc[index, 'pos'] = pos
     tw_list.loc[index, 'compound'] = comp
 
-tw_list.head(10)
 
 #Creating new data frames for all sentiments (positive, negative and neutral)
 tw_list_negative = tw_list[tw_list["sentiment"] == "negative"]
@@ -142,14 +138,12 @@ count_values_in_column(tw_list,"sentiment")
 # create data for Pie Chart
 pichart = count_values_in_column(tw_list, "sentiment")
 names = pichart.index
-print(names)
 size = pichart["Percentage"]
-print(size)
 
 # Create a circle for the center of the plot
 my_circle = plt.Circle( (0,0), 0.7, color = 'white')
 plt.pie(size, labels = names, colors=['green', 'blue', 'red'])
 p = plt.gcf()
 p.gca().add_artist(my_circle)
+plt.title("Sentiment Analysis for " + keyword + " on " + end_verbose )
 plt.show()
-'''
