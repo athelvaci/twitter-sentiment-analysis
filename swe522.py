@@ -14,11 +14,11 @@ api = tweepy.API(auth)
 
 # Search parameters
 keyword = "Cyberpunk"
-noOfTweet = 500
+noOfTweet = 50
 
-# Set the end date
+# Set the end date as X amount of days before today
 today = datetime.date.today()
-end = today - datetime.timedelta(days = 0)
+end = today - datetime.timedelta(days = 7)
 end_verbose = end.strftime('%A') + ', ' + end.strftime("%B") + ' ' + end.strftime("%d") + ', ' + end.strftime("%Y")
 
 # Search for tweets
